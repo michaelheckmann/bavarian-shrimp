@@ -1,12 +1,12 @@
+import { useMemo } from "react";
+import { COLS } from "../../App";
 import hat from "../../assets/hat.png";
 import shrimp from "../../assets/shrimp.png";
 import useWindowDimensions from "../../utils/useWindowDimensions";
 
-// const WIDTH = 100;
-
 export function Shrimp({ reverse, i }) {
   const { width } = useWindowDimensions();
-  const WIDTH = Math.min(width / 3, 200);
+  const WIDTH = useMemo(() => Math.min(width / COLS, 200), [width]);
 
   return (
     <div

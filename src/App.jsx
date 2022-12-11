@@ -1,15 +1,21 @@
 import { motion, useAnimationControls } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { Shrimp } from "./components/Shrimp/Shrimp";
 import { Textbox } from "./components/Textbox/Textbox";
+import useWindowDimensions from "./utils/useWindowDimensions";
 
 import music from "./assets/music.mp3";
+const audio = new Audio(music);
 
-const COLS = 3;
+export const COLS = 3;
+export const ROWS = 4;
 
 function App() {
-  const audio = new Audio(music);
+  const { width, height: HEIGHT } = useWindowDimensions();
+  const WIDTH = useMemo(() => Math.min(width / COLS, 200), [width]);
+
+  const [permissionGiven, setPermissionGiven] = useState(false);
 
   const jumpingShrimpControls = useAnimationControls();
   const [showJumpingShrimp, setShowJumpingShrimp] = useState(false);
@@ -29,15 +35,6 @@ function App() {
       translateY: 0,
       transition: { duration: 1, type: "spring" },
     });
-    await introBoxControls.start({
-      rotate: 720,
-      scale: 0,
-      boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
-      transition: { duration: 1, delay: 5 },
-    });
-    setShowIntroBox(false);
-    setShowJumpingShrimp(true);
-    audio.play();
   };
 
   useEffect(() => {
@@ -54,7 +51,7 @@ function App() {
     await jumpingShrimpControls.start({
       rotate: 180,
       scale: 2,
-      transition: { duration: 1, type: "tween", ease: "easeInOut" },
+      transition: { duration: 2, type: "tween", ease: "easeInOut" },
     });
     await jumpingShrimpControls.start({
       translateY: "100vh",
@@ -80,13 +77,24 @@ function App() {
       translateX: 0,
       transition: { duration: 1, type: "spring" },
     });
+    await paradingShrimpControls.start(({ i }) => ({
+      scaleX: -1,
+      translateY: [0, -50, 0],
+      transformY: 0,
+      transition: {
+        duration: 0.5,
+        type: "tween",
+        ease: "easeInOut",
+        delay: i * 0.1,
+      },
+    }));
     await paradingShrimpControls.start({
       rotate: 360,
       transition: {
         duration: 2,
         type: "tween",
         ease: "easeInOut",
-        repeat: 5,
+        repeat: 2,
         repeatType: "reverse",
       },
     });
@@ -94,8 +102,16 @@ function App() {
       translateX: isOddRow ? "-100vw" : "100vw",
       transition: { duration: 3, type: "spring", delay: isOddRow ? 1 : 0 },
     }));
-    setShowParadingShrimp(false);
     setShowGiftBox(true);
+    await paradingShrimpControls.start(({ i, isOddRow }) => ({
+      translateX: [
+        isOddRow ? "-100vw" : "100vw",
+        isOddRow ? "100vw" : "-100vw",
+      ],
+      translateY: ["-100vh", "100vh"],
+      transition: { duration: 3, type: "spring", delay: i * 0.2 },
+    }));
+    setShowParadingShrimp(false);
   };
 
   useEffect(() => {
@@ -106,13 +122,28 @@ function App() {
   const startGiftBoxSequence = async () => {
     await giftBoxControls.start({
       translateY: 0,
-      transition: { duration: 2, type: "spring", bounce: 0.6 },
+      transition: { duration: 2, type: "spring", bounce: 0.6, delay: 1 },
     });
   };
 
   useEffect(() => {
     showGiftBox && startGiftBoxSequence();
   }, [showGiftBox]);
+
+  const startAnimation = async () => {
+    await introBoxControls.start({
+      rotate: 720,
+      scale: 0,
+      boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
+      transition: { duration: 1, delay: 5 },
+    });
+    setShowIntroBox(false);
+    setShowJumpingShrimp(true);
+  };
+
+  useEffect(() => {
+    permissionGiven && startAnimation();
+  }, [permissionGiven]);
 
   useEffect(() => {
     setShowIntroBox(true);
@@ -127,11 +158,28 @@ function App() {
           initial={{
             translateY: "100vh",
           }}
+          onClick={() => {
+            if (!permissionGiven) {
+              audio.play();
+              setPermissionGiven(true);
+            }
+          }}
+          whileTap={{ scale: permissionGiven ? 1 : 0.9 }}
+          style={{
+            cursor: permissionGiven ? "default" : "pointer",
+            pointerEvents: permissionGiven ? "none" : "auto",
+          }}
         >
-          <Textbox>
+          <Textbox
+            style={{
+              borderColor: permissionGiven ? "#16a34a" : "#292524",
+            }}
+          >
             Das Wichtigste zuerst: Dreh die Lautstärke auf,
             <br />
             um das volle Erlebnis zu genießen! 🔊
+            <br />
+            Tippe mich an, wenn du bereit bist!
           </Textbox>
         </motion.div>
       )}
@@ -152,11 +200,15 @@ function App() {
       {showParadingShrimp && (
         <div
           style={{
+            position: "absolute",
+            top: (HEIGHT - WIDTH * ROWS) / 2,
+            left: (width - WIDTH * COLS) / 2,
+            zIndex: 1,
             display: "grid",
             gridTemplateColumns: `repeat(${COLS}, 1fr)`,
           }}
         >
-          {Array(12)
+          {Array(ROWS * COLS)
             .fill(true)
             .map((_, i) => {
               const isOddRow = i % (COLS * 2) >= COLS;
@@ -215,6 +267,7 @@ function App() {
                   background:
                     "linear-gradient(62deg, #fbc67e 0%, #ed6c47 100%)",
                   backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
               >
@@ -237,19 +290,3 @@ function App() {
 }
 
 export default App;
-
-// Shrimps
-{
-  /* <div
-  style={{
-    display: "grid",
-    gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-  }}
->
-  {Array(18)
-    .fill(true)
-    .map((_, i) => {
-      return <Shrimp key={i} i={i} reverse={(i + 1) % COLS == 0} />;
-    })}
-</div>; */
-}

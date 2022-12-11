@@ -122,7 +122,7 @@ function App() {
   const startGiftBoxSequence = async () => {
     await giftBoxControls.start({
       translateY: 0,
-      transition: { duration: 2, type: "spring", bounce: 0.6, delay: 1 },
+      transition: { duration: 2, type: "spring", bounce: 0.3, delay: 1 },
     });
   };
 
@@ -175,9 +175,9 @@ function App() {
               borderColor: permissionGiven ? "#16a34a" : "#292524",
             }}
           >
-            Das Wichtigste zuerst: Dreh die Lautstärke auf,
+            Das Wichtigste zuerst:
             <br />
-            um das volle Erlebnis zu genießen! 🔊
+            Dreh die Lautstärke auf, um das volle Erlebnis zu genießen! 🔊
             <br />
             Tippe mich an, wenn du bereit bist!
           </Textbox>

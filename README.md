@@ -16,7 +16,7 @@ git clone https://github.com/michaelheckmann/bavarian-shrimp.git
 ### Install dependencies
 
 ```bash
-cd bavarian shrimp
+cd bavarian-shrimp
 npm install
 ```
 
